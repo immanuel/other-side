@@ -5,6 +5,8 @@ var config = require('./config');
 var sites = require('./sites');
 
 function parseAndStoreFeed (site) {
+
+    console.log("Parsing: " + site.url);
     
     // Get the feed
     request(site.url, function (error, response, body) {
@@ -59,9 +61,12 @@ function parseAndStoreFeed (site) {
         });
 
     });
+
+    // TODO: What if processing feed takes more than 1 hour??
+    // Fetch the feed again after an hour
+    setTimeout(parseAndStoreFeed, 1000*60*60, site);
 };
 
 for(var site in sites) { 
-    console.log("Parsing: " + site);
     parseAndStoreFeed(sites[site]);
 }
