@@ -1,9 +1,16 @@
+const url = require('url');
+
+function getDomainAndPath(rawURL) {
+    var parsedURL = url.parse(rawURL);
+    return (parsedURL.hostname.match(/[^\.]*\.[^\.]*$/)[0] + parsedURL.pathname);
+}
+
 function baseGetDesc (item) {
     return item.description;
 }
 
 function baseGetLink (item) {
-    return item.link;
+    return getDomainAndPath(item.link);
 }
 
 var sites = {
@@ -17,7 +24,7 @@ var sites = {
         pubID: 2,
         url: 'http://feeds.foxnews.com/foxnews/politics?format=xml',
         getDesc : function(item) { return baseGetDesc(item).match('^(.*)<img')[1]} ,
-        getLink: function(item) {return item['feedburner:origLink']}
+        getLink: function(item) {return getDomainAndPath(item['feedburner:origLink'])}
         // No last built date
     },
     WSJ: {
@@ -32,7 +39,7 @@ var sites = {
         pubID: 4,
         url: 'http://rss.cnn.com/rss/cnn_allpolitics.rss',
         getDesc: function(item) {return baseGetDesc(item).match('^(.*)<div class="feedflare">')[1]},
-        getLink: function(item) {return item['feedburner:origLink']}
+        getLink: function(item) {return getDomainAndPath(item['feedburner:origLink'])}
     }
 };
 

@@ -6,7 +6,7 @@ var sites = require('./sites');
 
 function parseAndStoreFeed (site) {
 
-    console.log("Parsing: " + site.url);
+    console.log((new Date()).toISOString() + ": Parsing: " + site.url);
     
     // Get the feed
     request(site.url, function (error, response, body) {
