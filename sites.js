@@ -13,21 +13,24 @@ function baseGetLink (item) {
     return getDomainAndPath(item.link);
 }
 
-var sites = {
-    NYTimes: {
+var sites = [
+    {
+        name: 'NYTimes', 
         pubID: 1,
         url : 'http://rss.nytimes.com/services/xml/rss/nyt/Politics.xml',
         getDesc : baseGetDesc,
         getLink: baseGetLink
     },
-    FoxNews: {
+    {
+        name: 'FoxNews', 
         pubID: 2,
         url: 'http://feeds.foxnews.com/foxnews/politics?format=xml',
         getDesc : function(item) { return baseGetDesc(item).match('^(.*)<img')[1]} ,
         getLink: function(item) {return getDomainAndPath(item['feedburner:origLink'])}
         // No last built date
     },
-    WSJ: {
+    {
+        name: 'WSJ',
         pubID: 3,
         // url: 'http://www.wsj.com/xml/rss/3_7055.xml',
         url: 'http://www.wsj.com/xml/rss/3_7046.xml',
@@ -35,12 +38,13 @@ var sites = {
         getDesc: baseGetDesc,
         getLink: baseGetLink
     },
-    CNN: {
+    {
+        name: 'CNN',
         pubID: 4,
         url: 'http://rss.cnn.com/rss/cnn_allpolitics.rss',
         getDesc: function(item) {return baseGetDesc(item).match('^(.*)<div class="feedflare">')[1]},
         getLink: function(item) {return getDomainAndPath(item['feedburner:origLink'])}
     }
-};
+];
 
 module.exports = sites;

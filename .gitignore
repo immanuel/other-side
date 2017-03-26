@@ -1,4 +1,8 @@
 config.js
+test.js
+stopWords.js
+
+log/
 
 # Dependency directories
 node_modules/
