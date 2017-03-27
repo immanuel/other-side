@@ -8,6 +8,7 @@ var async = require('async');
 // Local files
 var config = require('./config');
 var sites = require('./sites');
+var overlap = require('./overlap');
 
 // Setup logging 
 winston.configure({
@@ -42,13 +43,7 @@ function processAndStoreArticle (article, callback) {
         winston.debug('[parseAndStoreArticle]', {site: site.name, article: item.title});
 
         // If time of publishing is not present, use current time
-        var date;
-        if (item.hasOwnProperty('pubDate')) {
-            date = new Date(item.pubDate);
-        }
-        else {
-            date = new Date();
-        }
+        var date = (item.hasOwnProperty('pubDate')) ? new Date(item.pubDate) : new Date();
 
         connection.query('insert into articles(pubID, guid, title, pubDate, description, link) ' +  
             'values (?, ?, ?, ?, ?, ?) on duplicate key ' + 
@@ -63,7 +58,7 @@ function processAndStoreArticle (article, callback) {
             ], 
             function (error, results, fields) {
                 if (error) {
-                    winston.error('[mysql.insert]', {
+                    winston.error('[mysql.insert.article]', {
                         site: site.name, 
                         article: item.title, 
                         guid: item.guid,
@@ -72,6 +67,8 @@ function processAndStoreArticle (article, callback) {
                         desc: site.getDesc(item),
                         error:error
                     });
+                    // Indicate task completion after trying and failing to insert article
+                    callback();
                 }
                 else {
                     // If the entry is new, calculate the similarty scores
@@ -80,15 +77,68 @@ function processAndStoreArticle (article, callback) {
                             site:site.name, 
                             article: item.title 
                         });
-                        // TODO; If the article doesn't exist, get the articles from last 7 days
-                        // TODO: For each existing article, compute the similarity with new article
-                        // TODO: Insert the score for each existing article if higher
-                        // TODO: Insert the list of scores for new article
+
+                        // If the article doesn't exist, get the articles from last 7 days
+                        // TODO: Cache the articles instead of fetching from DB
+                        // for each new article
+                        var newArticleID = results.insertId;
+                        connection.query('select articleID, pubID, title, description from articles where pubDate >= (now() - interval 7 day);', function (error, results, fields){
+
+                            if (error) {
+                                winston.error('[mysql.select.articles]', {error:error});
+                                return;
+                            }
+
+                            // Calculate the overlap between the new article and
+                            // all of the other arricles and store in DB
+                            results.forEach(function(existingItem) {
+                                if(existingItem.pubID != site.pubID) {
+
+                                    var overlapScore = overlap.getOverlapScore(
+                                        item.title + " " + site.getDesc(item),
+                                        existingItem.title + " " + existingItem.description
+                                    );
+                                    winston.debug('[overlap score]', {
+                                        title1: item.title, 
+                                        title2: existingItem.title, 
+                                        score: overlapScore
+                                    });
+
+                                    // TODO: Only add if score above threshold
+                                    if (overlapScore > config.overlapScoreThreshold) {
+                                        connection.query('insert into overlap(pubID1, pubID2, score) ' +  
+                                            'values (?, ?, ?) on duplicate key ' + 
+                                            'update score = values(score)', 
+                                            [
+                                                (newArticleID > existingItem.articleID) ? existingItem.articleID : newArticleID, 
+                                                (newArticleID > existingItem.articleID) ? newArticleID           : existingItem.articleID, 
+                                                overlapScore
+                                            ], 
+                                            function (error, results, fields) {
+                                                if(error) {
+                                                    winston.error('[mysql.insert.overlap]', {
+                                                        newArticleID: newArticleID, 
+                                                        existingArticleID: existingItem.articleID, 
+                                                        error: error
+                                                    });
+                                                }
+                                        });
+                                    }
+                                }
+                            });
+
+                            // Indicate task completion after inserting new
+                            // article
+                            callback();
+                        });
                     }
-                    // TODO: If the article exists, check that it hasn't changed much. If so, recompute
+                    else {
+                        // TODO: If the article exists, check that it hasn't changed much. If so, recompute
+                        
+                        // Indicate task completion after updating article
+                        callback();
+                    }
                 }
-                // Indicate task completion after inserting article
-                callback();
             });
     }
     else {

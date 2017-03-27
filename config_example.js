@@ -12,4 +12,6 @@ config.db = {
 config.logFile = './log/app.log';
 config.logLevel = 'info';
 
+config.overlapScoreThreshold = 0;
+
 module.exports = config;
