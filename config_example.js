@@ -4,7 +4,8 @@ config.db = {
     host     : 'localhost',
     user     : 'user',
     password : 'pwd',
-    database : 'db'
+    database : 'db',
+    flags    : '-FOUND_ROWS'
 };
 
 // TODO: Create log folder using some startup script
