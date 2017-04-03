@@ -5,8 +5,10 @@
   "main": "app.js",
   "dependencies": {
     "async": "^2.2.0",
+    "body-parser": "^1.17.1",
     "mysql": "^2.13.0",
     "request": "^2.81.0",
+    "restify": "^4.3.0",
     "winston": "^2.3.1",
     "xml2js": "^0.4.17"
   },
