@@ -5,8 +5,21 @@ var config = require('./config');
 winston.configure({
     transports: [
         new (winston.transports.File)({ 
-            filename: config.logFile, 
-            level: config.logLevel,
+            name: 'info-file', 
+            filename: config.infoFile, 
+            level: 'info',
+            handleExceptions: true,
+            humanReadableUnhandledException: true,
+            json: false,
+            zippedArchive: true,
+            tailable: true,
+            maxsize: 10000000, // 10MB
+            maxFiles: 100 //100*10MB = 1GB
+        }),
+        new (winston.transports.File)({ 
+            name: 'error-file',
+            filename: config.errorFile, 
+            level: 'error',
             handleExceptions: true,
             humanReadableUnhandledException: true,
             json: false,

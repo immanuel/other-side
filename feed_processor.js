@@ -41,10 +41,7 @@ function processAndStoreArticle (article, callback) {
                     winston.error('[mysql.insert.article]', {
                         site: site.name, 
                         article: item.title, 
-                        guid: item.guid,
-                        date: date.toISOString().replace(/T/, ' ').replace(/\..+/, ''), 
                         link: site.getLink(item),
-                        desc: site.getDesc(item),
                         error:error
                     });
                     // Indicate task completion after trying and failing to insert article
@@ -66,6 +63,10 @@ function processAndStoreArticle (article, callback) {
 
                             if (error) {
                                 winston.error('[mysql.select.articles]', {error:error});
+
+                                // Indicate task completion without inserting
+                                // overlap scores
+                                callback();
                                 return;
                             }
 
@@ -84,7 +85,6 @@ function processAndStoreArticle (article, callback) {
                                         score: overlapScore
                                     });
 
-                                    // TODO: Only add if score above threshold
                                     if (overlapScore > config.overlapScoreThreshold) {
                                         connection.query('insert into overlap(pubID1, pubID2, score) ' +  
                                             'values (?, ?, ?) on duplicate key ' + 
