@@ -3,7 +3,6 @@ var restify = require('restify');
 var server = restify.createServer();
 
 var config = require('./config');
-var cache = require('./cache');
 
 // Setup logging
 winston.configure({
@@ -34,6 +33,8 @@ winston.configure({
         })
     ]
 });
+
+var cache = require('./cache');
 
 server.on('uncaughtException', function(req, res, route, error) {
     winston.error('[uncaught exception', error);

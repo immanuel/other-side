@@ -50,6 +50,7 @@ function refreshArticleCache() {
                         pubDate >= (now() - interval 7 day);`, function (error, results, fields){
         if (error) {
             winston.error('[cache.mysql.select.articles]', {error:error});
+            setTimeout(refreshArticleCache, 1000*60*config.cacheRefreshFreq);
             return;
         }
 
@@ -70,6 +71,7 @@ function refreshArticleCache() {
         connection.query(scoresQuery, function(error, results, fields) {
             if (error) {
                 winston.error('[cache.mysql.select.scores]', {error:error});
+                setTimeout(refreshArticleCache, 1000*60*config.cacheRefreshFreq);
                 return;
             }
 
@@ -93,10 +95,10 @@ function refreshArticleCache() {
             articleById = newArticleById;
             relatedArticles = newRelatedArticles;
             winston.info('[cache.refresh.complete]');
+
+            setTimeout(refreshArticleCache, 1000*60*config.cacheRefreshFreq);
         });
     });
-
-    setTimeout(refreshArticleCache, 1000*60*60);
 }
 
 refreshArticleCache();
