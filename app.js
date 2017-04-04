@@ -6,7 +6,7 @@ winston.configure({
     transports: [
         new (winston.transports.File)({ 
             name: 'info-file', 
-            filename: config.infoFile, 
+            filename: config.appInfoFile, 
             level: 'info',
             handleExceptions: true,
             humanReadableUnhandledException: true,
@@ -18,7 +18,7 @@ winston.configure({
         }),
         new (winston.transports.File)({ 
             name: 'error-file',
-            filename: config.errorFile, 
+            filename: config.appErrorFile, 
             level: 'error',
             handleExceptions: true,
             humanReadableUnhandledException: true,

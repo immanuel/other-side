@@ -1,11 +1,42 @@
+var winston = require('winston');
 var restify = require('restify');
 var server = restify.createServer();
 
 var config = require('./config');
 var cache = require('./cache');
 
+// Setup logging
+winston.configure({
+    transports: [
+        new (winston.transports.File)({ 
+            name: 'server-info-file', 
+            filename: config.serverInfoFile, 
+            level: 'info',
+            handleExceptions: true,
+            humanReadableUnhandledException: true,
+            json: false,
+            zippedArchive: true,
+            tailable: true,
+            maxsize: 10000000, // 10MB
+            maxFiles: 100 //100*10MB = 1GB
+        }),
+        new (winston.transports.File)({ 
+            name: 'server-error-file',
+            filename: config.serverErrorFile, 
+            level: 'error',
+            handleExceptions: true,
+            humanReadableUnhandledException: true,
+            json: false,
+            zippedArchive: true,
+            tailable: true,
+            maxsize: 10000000, // 10MB
+            maxFiles: 100 //100*10MB = 1GB
+        })
+    ]
+});
+
 server.on('uncaughtException', function(req, res, route, error) {
-    console.log(error);
+    winston.error('[uncaught exception', error);
     res.send(new restify.InternalError());
 });
 
@@ -28,41 +59,32 @@ server.post(config.apiURL, function (req, res) {
         res.send(new restify.UnprocessableEntityError("'link' is not a string"));
     }
     else {
-
         articleIdByLink = cache.getArticleIdByLink();
-
-        responseObject = {
-            articles: []
-        };
+        responseObject = {articles:[]};
 
         if(req.body['link'] in articleIdByLink) {
-            console.log('Found article by link');
-
             requestArticleId = articleIdByLink[req.body['link']];
-
             relatedArticles = cache.getRelatedArticles();
 
             if(requestArticleId in relatedArticles){
-                console.log('Found related articles');
-
                 articleById = cache.getArticleById();
                 relatedArticles[requestArticleId].forEach(function(relatedArticle){
                     relatedArticleId = relatedArticle[0];
                     if(relatedArticleId in articleById){
-                        console.log('returning article: ', relatedArticleId);
                         responseObject.articles.push(articleById[relatedArticleId]);
                     }
                 });
+                winston.debug('[related articles served]', {
+                    requestArticleId: requestArticleId, 
+                    responseArticles: relatedArticles[requestArticleId]
+                });
             }
-
         }
-
         res.json(responseObject);
     }
-   
 })
 
 server.listen(config.port, function () {
-    console.log('Example app listening')
+    winston.info('[server started]');
 })
 
