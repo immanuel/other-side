@@ -9,9 +9,16 @@ config.db = {
 };
 
 // TODO: Create log folder using some startup script
-config.logFile = './log/app.log';
-config.logLevel = 'info';
+config.appInfoFile = './log/app_info.log';
+config.appErrorFile = './log/app_error.log';
+config.serverInfoFile = './log/server_info.log';
+config.serverErrorFile = './log/server_error.log';
 
-config.overlapScoreThreshold = 0;
+config.overlapScoreThreshold = 0.1;
+
+config.port = 8080;
+config.apiURL = '/';
+
+config.cacheRefreshFreq = 60; // Minutes
 
 module.exports = config;
