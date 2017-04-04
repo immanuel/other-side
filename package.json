@@ -1,7 +1,7 @@
 {
   "name": "other-side",
-  "version": "0.0.0",
-  "description": "",
+  "version": "1.0.0",
+  "description": "Discover news articles from different sides of the political spectrum",
   "main": "app.js",
   "dependencies": {
     "async": "^2.2.0",
@@ -16,6 +16,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC"
+  "author": "Immanuel Thomas <immanuel278@gmail.com>",
+  "license": "MIT"
 }
