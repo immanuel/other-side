@@ -104,5 +104,5 @@ refreshArticleCache();
 module.exports = {
     getArticleIdByLink: function(){ return articleIdByLink} ,
     getArticleById: function(){ return articleById} ,
-    relatedArticles: relatedArticles
+    getRelatedArticles: function() {return relatedArticles}
 };

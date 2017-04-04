@@ -20,7 +20,6 @@ server.use(restify.throttle({
 }));
 
 server.post(config.apiURL, function (req, res) {
-    console.log(req.body);
 
     if(!('link' in req.body)){
         res.send(new restify.UnprocessableEntityError("Missing property 'link'"));
@@ -29,7 +28,36 @@ server.post(config.apiURL, function (req, res) {
         res.send(new restify.UnprocessableEntityError("'link' is not a string"));
     }
     else {
-        res.json({respose: "some other text"})
+
+        articleIdByLink = cache.getArticleIdByLink();
+
+        responseObject = {
+            articles: []
+        };
+
+        if(req.body['link'] in articleIdByLink) {
+            console.log('Found article by link');
+
+            requestArticleId = articleIdByLink[req.body['link']];
+
+            relatedArticles = cache.getRelatedArticles();
+
+            if(requestArticleId in relatedArticles){
+                console.log('Found related articles');
+
+                articleById = cache.getArticleById();
+                relatedArticles[requestArticleId].forEach(function(relatedArticle){
+                    relatedArticleId = relatedArticle[0];
+                    if(relatedArticleId in articleById){
+                        console.log('returning article: ', relatedArticleId);
+                        responseObject.articles.push(articleById[relatedArticleId]);
+                    }
+                });
+            }
+
+        }
+
+        res.json(responseObject);
     }
    
 })
