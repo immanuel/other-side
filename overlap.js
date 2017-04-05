@@ -26,7 +26,6 @@ var STOP_WORDS = new Set([
     'with']);
 
 function tokenize(text) {
-
     text = text.toLowerCase();
 
     // Remove the 's at the end of words

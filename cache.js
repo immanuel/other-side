@@ -9,10 +9,10 @@ var relatedArticles = {}
 
 var MAX_MATCHES = 1;
 
-var scoresQuery = `select o.pubID1, o.pubID2, o.score
+var scoresQuery = `select o.articleID1, o.articleID2, o.score
                 from overlap o
-                join articles a1 on o.pubID1 = a1.articleID
-                join articles a2 on o.pubID2 = a2.articleID
+                join articles a1 on o.articleID1 = a1.articleID
+                join articles a2 on o.articleID2 = a2.articleID
                 where
                     a1.pubDate >= (now() - interval 7 day) and
                     a2.pubDate >= (now() - interval 7 day) and
@@ -78,8 +78,8 @@ function refreshArticleCache() {
             newRelatedArticles = {};
 
             results.forEach(function(relation) {
-                id1 = relation.pubID1;
-                id2 = relation.pubID2;
+                id1 = relation.articleID1;
+                id2 = relation.articleID2;
                 score = relation.score;
 
                 if( !(id1 in newRelatedArticles) )

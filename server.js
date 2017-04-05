@@ -7,30 +7,10 @@ var config = require('./config');
 // Setup logging
 winston.configure({
     transports: [
-        new (winston.transports.File)({ 
-            name: 'server-info-file', 
-            filename: config.serverInfoFile, 
-            level: 'info',
-            handleExceptions: true,
-            humanReadableUnhandledException: true,
-            json: false,
-            zippedArchive: true,
-            tailable: true,
-            maxsize: 10000000, // 10MB
-            maxFiles: 100 //100*10MB = 1GB
-        }),
-        new (winston.transports.File)({ 
-            name: 'server-error-file',
-            filename: config.serverErrorFile, 
-            level: 'error',
-            handleExceptions: true,
-            humanReadableUnhandledException: true,
-            json: false,
-            zippedArchive: true,
-            tailable: true,
-            maxsize: 10000000, // 10MB
-            maxFiles: 100 //100*10MB = 1GB
-        })
+        new (winston.transports.File)(config.getTransportOptions(
+            'server-info-file', config.serverInfoFile, 'info'),
+        new (winston.transports.File)(config.getTransportOptions(
+            'server-error-file', config.serverErrorFile, 'error')
     ]
 });
 

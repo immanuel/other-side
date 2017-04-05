@@ -12,16 +12,12 @@ var overlap = require('./overlap');
 var connection = mysql.createConnection(config.db)
 
 // Function to process a single news article
-function processAndStoreArticle (article, callback) {
+function processAndStoreArticle(article, callback) {
     var site = article.site;
     var item = article.item;
 
-
     // Store item only if it has guid, title and link
     if (item.hasOwnProperty('guid') && item.hasOwnProperty('title') && item.hasOwnProperty('link')) {
-
-        winston.debug('[parseAndStoreArticle]', {site: site.name, article: item.title});
-
         // If time of publishing is not present, use current time
         var date = (item.hasOwnProperty('pubDate')) ? new Date(item.pubDate) : new Date();
 
@@ -60,8 +56,9 @@ function processAndStoreArticle (article, callback) {
                         // for each new article
                         var newArticleID = results.insertId;
                         connection.query('select articleID, pubID, title, description from articles where pubDate >= (now() - interval 7 day);', function (error, results, fields){
-
                             if (error) {
+                                // TODO: calculate overlaps for this article
+                                // sometime
                                 winston.error('[mysql.select.articles]', {error:error});
 
                                 // Indicate task completion without inserting
@@ -74,19 +71,13 @@ function processAndStoreArticle (article, callback) {
                             // all of the other arricles and store in DB
                             results.forEach(function(existingItem) {
                                 if(existingItem.pubID != site.pubID) {
-
                                     var overlapScore = overlap.getOverlapScore(
                                         item.title + " " + site.getDesc(item),
                                         existingItem.title + " " + existingItem.description
                                     );
-                                    winston.debug('[overlap score]', {
-                                        title1: item.title, 
-                                        title2: existingItem.title, 
-                                        score: overlapScore
-                                    });
 
                                     if (overlapScore > config.overlapScoreThreshold) {
-                                        connection.query('insert into overlap(pubID1, pubID2, score) ' +  
+                                        connection.query('insert into overlap(articleID1, articleID2, score) ' +  
                                             'values (?, ?, ?) on duplicate key ' + 
                                             'update score = values(score)', 
                                             [
@@ -96,17 +87,19 @@ function processAndStoreArticle (article, callback) {
                                             ], 
                                             function (error, results, fields) {
                                                 if(error) {
+                                                    // TODO: calculate overlap
+                                                    // for this pair sometime
                                                     winston.error('[mysql.insert.overlap]', {
                                                         newArticleID: newArticleID, 
                                                         existingArticleID: existingItem.articleID, 
                                                         error: error
                                                     });
                                                 }
-                                        });
+                                            }
+                                        );
                                     }
                                 }
                             });
-
                             // Indicate task completion after inserting new
                             // article
                             callback();
@@ -114,18 +107,17 @@ function processAndStoreArticle (article, callback) {
                     }
                     else {
                         // TODO: If the article exists, check that it hasn't changed much. If so, recompute
-                        
                         // Indicate task completion after updating article
                         callback();
                     }
                 }
-            });
+            }
+        );
     }
     else {
         // Indicate task completion without inserting the article
         callback();
     }
-
 }
 
 // Setup a queue to process each news article sequentially
@@ -133,12 +125,10 @@ var articleQ = async.queue(processAndStoreArticle, 1);
 
 // Function to process a site's feed and repeat after 1 hour
 function parseAndStoreFeed (site) {
-
     winston.info('[parseAndStoreFeed]', {site: site.name});
     
     // Get the feed
     request(site.url, function (error, response, body) {
-
         // If unable to download feed, skip this processing round
         if (error) {
             winston.error('[request]', {site: site.name, error: error, response: response});
@@ -147,7 +137,6 @@ function parseAndStoreFeed (site) {
 
         // Parse the XML feed
         parseString(body, {explicitArray: false, trim: true, ignoreAttrs: true}, function(err, result) {
-
             // If unable to parse feed, skip this processing round
             if (err) {
                 winston.error('[parseString]', {site: site.name, error: err});
